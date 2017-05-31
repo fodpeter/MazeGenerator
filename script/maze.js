@@ -39,7 +39,7 @@ function Cell(x, y, side) {
 
 function Maze() {
 	this.width = 600;
-	this.height = 600;
+	this.height = 450;
 	this.side = 30;
 	this.gridwidth = Math.floor(this.width/this.side);
 	this.gridheight = Math.floor(this.height/this.side);
@@ -49,7 +49,7 @@ function Maze() {
 	for (let yi = 0; yi < this.gridheight; yi++) {
 		for (let xi = 0; xi < this.gridwidth; xi++) {
 			this.cells.push(new Cell(xi, yi, this.side));
-		}	
+		}
 	}
 	
 	this.getCell = (x, y) => {
@@ -57,7 +57,7 @@ function Maze() {
 			return null;
 		}
 		return this.cells[x + this.gridwidth*y];
-	}
+	};
 	
 	this.draw = () => {
 		fill(Colors.background);
@@ -80,16 +80,21 @@ function Maze() {
 			}	
 		}
 	};
+	
+	this.getCellCount = () => this.cells.length;
 }
 
 function DFSMazeGenerator(maze, startCell) {
 	this.maze = maze;
 	this.queue = [startCell];
+	this.ready = false;
+	this.steps = 1;
 	
 	this.step = () => {
 		if (this.queue.length > 0) {
 			let cell = this.queue.pop();
 			cell.visited = true;
+			this.steps = this.steps + 1;
 			let neighbors = this.getNeighbors(cell).filter(c => !c.visited);
 			if (neighbors.length>0) {
 				this.queue.push(cell);
@@ -110,10 +115,10 @@ function DFSMazeGenerator(maze, startCell) {
 				}
 				this.queue.push(nextNeighbor);
 			}
-			return true;
 		} else {
-			return false;
+			this.ready = true;
 		}
+		return this.ready;
 	};
 	
 	this.getNeighbors = (cell) => {
@@ -133,5 +138,18 @@ function DFSMazeGenerator(maze, startCell) {
 			let cell = this.queue[this.queue.length-1];
 			cell.draw(Colors.dfsCursor);
 		}
-	}
+		noStroke();
+		fill(1);
+		let status;
+		if (this.ready) {
+			status = "Maze ready";
+		} else {
+			status = "Progress: " + (this.getProgress()*100).toFixed(1) + "%";
+		}
+		text(status, 10, this.maze.height+20);
+	};
+	
+	this.getProgress = () => {
+		return this.steps / this.maze.getCellCount() / 2;
+	};
 }
